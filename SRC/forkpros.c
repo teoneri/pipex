@@ -20,6 +20,7 @@ void	ft_parentpro(int file2, char **av, char **envp, int *pipe)
 	char *cmd;
 	int i;
 
+	wait();
 	i = 0;
 	if(dup2(file2, STDOUT_FILENO) < 0 || dup2(pipe[0], 0) < 0)
 		exit(0);
