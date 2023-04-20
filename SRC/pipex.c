@@ -12,52 +12,87 @@
 
 #include "pipex.h"
 
-
-char **ft_appendChar(char **str, char *c)
+void	ex_child(char *av, char **env, t_pipex pipex)
 {
-	char **appended = str;
-	while(*str)
+	int id;
+	
+	pipe(pipex.pipe);
+	id = fork();
+	if(id == 0)
 	{
-		ft_strjoin(*str, c);
-		str++;
+		close(pipex.pipe[0]);
+		dup2(pipex.pipe[1], 1);
+		ft_exec(av, env);
 	}
-	str = appended;
-	return str;
+	else
+	{
+		wait(&id);
+		close(pipex.pipe[1]);
+		dup2(pipex.pipe[0], 0);
+	}
 }
 
-char *ft_getPaths(char **envp)
+void	pipex(int ac, char **av, char **envp, t_pipex pipex)
 {
-	char *paths;
-
-	while(envp)
+	int	i;
+	if(ft_strcmp(av[1], "here_doc") == 0)
+		i = 3;
+	else
 	{
-		if(!ft_strncmp("PATH", *envp, 4))
-			break;
-		envp++;
+		i = 2;
+		dup2(pipex.fd1, 0);
 	}
-	paths = *envp + 5;
-	return(paths);
+	while(i < ac -2)
+	{
+		ex_child(av[i], envp, pipex);
+		i++;
+	}
+	dup2(pipex.fd2, 1);
+	ft_exec(av[ac - 2], envp);
 }
+
+void	open_files(t_pipex pipe, int type, char **av, int ac)
+{
+	if(type == 1)
+	{
+		pipe.fd1 = open(av[1], O_RDONLY);
+		pipe.fd2 = open(av[ac - 1], O_RDWR | O_TRUNC | O_CREAT, 0644);
+		
+		if(pipe.fd1 < 0 || pipe.fd2 < 0)
+			ft_error(1);
+	}
+	if(type == 2)
+	{}
+}
+
 
 int main(int ac, char **av, char **envp)
 {
-	int file1;
-	int file2;
-	int id;
-	int pipeid[2];
-	if(ac != 5)
+	t_pipex pipe;
+
+	if(ac > 5)
 	{
-		perror("args error");
-		return 1;
+		if(ft_strcmp(av[1], "here_doc") == 0)
+		{
+
+		}
+		pipex(ac, av, envp, pipe);
 	}
-	file1 = open(av[1], O_RDONLY);
-	file2 = open(av[4], O_WRONLY | O_APPEND | O_CREAT, 0644);
-	if(file1 < 0)
-		perror("file error");
-	pipe(pipeid);
-	id = fork();
-	if(id == 0)
-		ft_childpro(file1, av, envp, pipeid);
 	else
-		ft_parentpro(file2, av, envp, pipeid);
+		ft_error(0);
+
+
 }
+
+
+// int main()
+// {
+//     char lol[] = "cat";
+//     char **ok;
+
+//     ok = ft_cmd_split(lol, ' ');
+   
+//         printf("%s\n", ok[0]);
+    
+//     return (0);
+// }

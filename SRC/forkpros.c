@@ -12,56 +12,83 @@
 
 #include "pipex.h"
 
-void	ft_parentpro(int file2, char **av, char **envp, int *pipe)
+void ft_freepath(char **path)
 {
-	char *paths;
-	char **split_paths;
-	char **cmd_args;
-	char *cmd;
 	int i;
 
-	wait();
 	i = 0;
-	if(dup2(file2, STDOUT_FILENO) < 0 || dup2(pipe[0], 0) < 0)
-		exit(0);
-	close(pipe[1]);
-	paths = ft_getPaths(envp);
-	split_paths = ft_split(paths, ':');
-	split_paths = ft_appendChar(split_paths, "/");
-	cmd_args = ft_split(av[3], ' ');
-	while(split_paths[i++])
+	while(path[i])
 	{
-		cmd = ft_strjoin(split_paths[i], cmd_args[0]);
-		if(access(cmd, X_OK) == 0)
-			execve(cmd, cmd_args, envp);
-		free(cmd);
+		free(path[i]);
+		i++;
 	}
-	perror("Child Process Error");
 }
 
-
-
-void	ft_childpro(int file1, char **av, char **envp, int *pipe)
+void   ft_error(int error)
 {
-	char *paths;
-	char **split_paths;
-	char **cmd_args;
-	char *cmd;
+    if (error == 0)
+        perror("Error! Wrong number of arguments");
+    else if (error == 1)
+        perror("pipe() Error!");
+    else if (error == 2)
+        perror("fork() Error!");
+    else if (error == 3)
+        perror("file Error!");
+    else if (error == 4)
+        perror("file dup2() Error!");
+    else if (error == 5)
+        perror("end[] dup2() Error!");
+    else if (error == 6)
+        perror("cmd Error!");
+    else if (error == 7)
+        perror("path Error!");
+    else if (error == 8)
+        perror("execve() Error!");
+    exit(127);
+}
+
+char	*ft_path(char **env, char *cmd)
+{
 	int i;
+	char **paths;
+	char *path;
+	char *tmp;
 
 	i = 0;
-	if(dup2(file1, STDIN_FILENO) < 0 || dup2(pipe[1], 1) < 0)
-		exit(0);
-	close(pipe[0]);
-	paths = ft_getPaths(envp);
-	split_paths = ft_split(paths, ':');
-	split_paths = ft_appendChar(split_paths, "/");
-	cmd_args = ft_split(av[2], ' ');
-	while(split_paths[i++])
+	while(ft_strnstr(env[i], "PATH", 4) == 0)
+		i++;
+	paths = ft_split(env[i] + 5, ':');
+	i = 0;
+	while(paths[i])
 	{
-		cmd = ft_strjoin(split_paths[i], cmd_args[0]);
-		execve(cmd, cmd_args, envp);
-		free(cmd);
+		tmp = ft_strjoin(paths[i], "/");
+		path = ft_strjoin(tmp, cmd);
+		free(tmp);
+		if(access(path, F_OK) == 0)
+			return (path);
+		free(path);
+		i++;
 	}
-	perror("Child Process Error");
+	ft_freepath(paths);
+	return(NULL);
+}
+
+void ft_exec(char *av, char **env)
+{
+	char *path;
+	char **cmd;
+
+	cmd = ft_cmd_split(av, ' ');
+	if(cmd == NULL)
+		ft_error(6);
+	path = ft_path(env, cmd[0]);
+	if(!path)
+	{
+		ft_freepath(cmd);
+		free(path);
+		ft_error(7);
+	}
+	if(execve(path, cmd, env) < 0)
+		ft_error(8);
+	free(path);
 }

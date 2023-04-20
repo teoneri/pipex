@@ -1,6 +1,6 @@
 GCC     = gcc
 CFLAGS  = -g -Wall -Wextra -Werror -fPIC -fPIE
-FILES   = SRC/pipex.c SRC/forkpros.c
+FILES   = SRC/pipex.c SRC/forkpros.c SRC/pipesplit.c
 NAME    = pipex
 BONUS_NAME = checker
 PRINTF  = ft_printf
