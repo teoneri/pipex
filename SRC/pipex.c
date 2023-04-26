@@ -51,48 +51,60 @@ void	pipex(int ac, char **av, char **envp, t_pipex pipex)
 	ft_exec(av[ac - 2], envp);
 }
 
-void	open_files(t_pipex pipe, int type, char **av, int ac)
+void    here_doc(char *limiter, int ac, t_pipex pipex)
 {
-	if(type == 1)
-	{
-		pipe.fd1 = open(av[1], O_RDONLY);
-		pipe.fd2 = open(av[ac - 1], O_RDWR | O_TRUNC | O_CREAT, 0644);
-		
-		if(pipe.fd1 < 0 || pipe.fd2 < 0)
-			ft_error(1);
-	}
-	if(type == 2)
-	{}
-}
+    pid_t   reader;
+    char    *line;
 
+	if(ac < 5)
+		ft_error(0);
+    if (pipe(pipex.pipe) == -1)
+        ft_error(3);
+    reader = fork();
+    if (reader == 0)
+    {
+        close(pipex.pipe[0]);
+        while (1)
+        {
+			line = get_next_line(0);
+			if(!line)
+				break;
+            if (ft_strncmp(line, limiter, ft_strlen(limiter)) == 0)
+                exit(EXIT_SUCCESS);
+            write(pipex.pipe[1], line, ft_strlen(line));
+        }
+    }
+    else
+    {
+        close(pipex.pipe[1]);
+        dup2(pipex.pipe[0], STDIN_FILENO);
+        wait(NULL);
+    }
+}
 
 int main(int ac, char **av, char **envp)
 {
 	t_pipex pipe;
 
-	if(ac > 5)
+	if(ac >= 5)
 	{
 		if(ft_strcmp(av[1], "here_doc") == 0)
 		{
-
+			pipe.fd2 = open(av[ac - 1], O_RDWR | O_TRUNC | O_CREAT, 0644);;
+			if(pipe.fd2 < 0)
+				ft_error(1);
+			here_doc(av[2], ac, pipe);
+			pipex(ac, av, envp, pipe);
 		}
-		pipex(ac, av, envp, pipe);
+		else
+		{
+			pipe.fd1 = open(av[1], O_RDONLY);
+			pipe.fd2 = open(av[ac - 1], O_RDWR | O_TRUNC | O_CREAT , 0644);
+			if(pipe.fd1 < 0 || pipe.fd2 < 0)
+				ft_error(1);
+			pipex(ac, av, envp, pipe);
+		}
 	}
 	else
 		ft_error(0);
-
-
 }
-
-
-// int main()
-// {
-//     char lol[] = "cat";
-//     char **ok;
-
-//     ok = ft_cmd_split(lol, ' ');
-   
-//         printf("%s\n", ok[0]);
-    
-//     return (0);
-// }
