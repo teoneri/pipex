@@ -12,83 +12,82 @@
 
 #include "pipex.h"
 
-void ft_freepath(char **path)
+void	ft_freepath(char **path)
 {
-	int i;
+	int	i;
 
 	i = 0;
-	while(path[i])
+	while (path[i])
 	{
 		free(path[i]);
 		i++;
 	}
 }
 
-void   ft_error(int error)
+void	ft_error(int error)
 {
-    if (error == 0)
-        perror("Error! Wrong number of arguments");
-    else if (error == 1)
-        perror("pipe() Error!");
-    else if (error == 2)
-        perror("fork() Error!");
-    else if (error == 3)
-        perror("file Error!");
-    else if (error == 4)
-        perror("file dup2() Error!");
-    else if (error == 5)
-        perror("end[] dup2() Error!");
-    else if (error == 6)
-        perror("cmd Error!");
-    else if (error == 7)
-        perror("path Error!");
-    else if (error == 8)
-        perror("execve() Error!");
-    exit(127);
+	if (error == 0)
+		perror("Error! Wrong number of arguments");
+	else if (error == 1)
+		perror("pipe() Error!");
+	else if (error == 2)
+		perror("fork() Error!");
+	else if (error == 3)
+		perror("file Error!");
+	else if (error == 4)
+		perror("dup2() Error!");
+	else if (error == 6)
+		perror("cmd Error!");
+	else if (error == 7)
+		perror("path Error!");
+	else if (error == 8)
+		perror("execve() Error!");
+	exit(127);
 }
 
 char	*ft_path(char **env, char *cmd)
 {
-	int i;
-	char **paths;
-	char *path;
-	char *tmp;
+	int		i;
+	char	**paths;
+	char	*path;
+	char	*tmp;
 
 	i = 0;
-	while(ft_strnstr(env[i], "PATH", 4) == 0)
+	while (ft_strnstr(env[i], "PATH", 4) == 0)
 		i++;
 	paths = ft_split(env[i] + 5, ':');
 	i = 0;
-	while(paths[i])
+	while (paths[i])
 	{
 		tmp = ft_strjoin(paths[i], "/");
 		path = ft_strjoin(tmp, cmd);
 		free(tmp);
-		if(access(path, F_OK) == 0)
+		if (access(path, F_OK) == 0)
 			return (path);
 		free(path);
 		i++;
 	}
 	ft_freepath(paths);
-	return(NULL);
+	return (NULL);
 }
 
-void ft_exec(char *av, char **env)
+void	ft_exec(char *av, char **env)
 {
-	char *path;
-	char **cmd;
+	char	*path;
+	char	**cmd;
 
-	cmd = ft_cmd_split(av, ' ');
-	if(cmd == NULL)
+	cmd = ft_pipe_split(av, ' ');
+	if (cmd == NULL)
 		ft_error(6);
 	path = ft_path(env, cmd[0]);
-	if(!path)
+	if (!path)
 	{
 		ft_freepath(cmd);
 		free(path);
 		ft_error(7);
 	}
-	if(execve(path, cmd, env) < 0)
+	if (execve(path, cmd, env) < 0)
 		ft_error(8);
 	free(path);
+	ft_freepath(cmd);
 }
