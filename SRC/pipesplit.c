@@ -52,7 +52,8 @@ char	*ft_word_create(char *s, int start, char c)
 	{
 		start++;
 		k++;
-	}	
+	}
+	k++;
 	word = malloc(sizeof(char) * k + 1);
 	k = 0;
 	while (s[i] != c && s[i] != '\0')
@@ -61,7 +62,6 @@ char	*ft_word_create(char *s, int start, char c)
 		i++;
 		k++;
 	}
-	k++;
 	word[k] = '\0';
 	return (word);
 }
